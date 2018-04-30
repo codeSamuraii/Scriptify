@@ -39,8 +39,6 @@ def file_to_string(file_path):
 
 def string_to_file(hex_string, new_file_path):
     binary_data = eval(hex_string)
-    if not new_file_path.endswith('.py'):
-        new_file_path += '.py'
 
     with open_file(new_file_path, 'wb') as new_file:
         size = new_file.write(binary_data)
