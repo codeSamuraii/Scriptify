@@ -1,7 +1,7 @@
 # Scriptify
 Scriptify let's you convert any file into a runnable Python script.
 
-## Usage
+### Usage
 To turn something into an executable code, use:
 ```
 scriptify.py [source_file] [dest_file].py
