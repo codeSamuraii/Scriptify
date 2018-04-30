@@ -13,10 +13,10 @@ def print_exit(message):
     exit()
 
 
-def open_file(path, mode):
+def open_file(filepath, mode):
     try:
-        filename = path.basename(path)
-        file_object = open(path, mode)
+        filename = path.basename(filepath)
+        file_object = open(filepath, mode)
     except FileNotFoundError:
         print_exit(f"Error while opening \'{filename}\': not found.")
     except PermissionError:
@@ -64,11 +64,32 @@ if __name__ == '__main__':
     dst_name = path.basename(dest_path)
     dst_abspath = path.abspath(path.expanduser(dest_path))
 
-    print(" ~ ~ Scriptify v0.1 ~ ~\n")
+    print("\n ~ ~ Scriptify v0.1 ~ ~\n")
     print(f"Source      : {src_name}")
     print(f"Destination : {dst_name}")
 
     if input("\nDo you want to continue ? [Y/n] ") in {"n", "N"}:
         print_exit("Aborting.")
 
-# COMBAK: HERE
+    print("* Reading source file... ", end='')
+    bin = file_to_string(src_abspath)
+    print("OK.")
+
+    print("* Loading template... ", end='')
+    with open_file("container_script.template", 'r') as template:
+        script = template.read()
+    print("OK.")
+
+    print("* Creating script... ", end='')
+    with open_file(dst_abspath, 'w') as output:
+        filled = script.replace("$ID_DATA", bin).replace("$ID_FILENAME", src_name)
+        output.write(filled)
+        print("OK.")
+
+    print("Finished. Launch the script with Python to recover your file.")
+
+# TODO:
+#     - Documentation
+#     - Binary data compression
+#     - Binary data encryption w/ password protect
+#     - Cleaning, design improvements
