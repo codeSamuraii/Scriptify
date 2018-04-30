@@ -1,22 +1,21 @@
 # Scriptify
-Scriptify converts *any* file to a runnable Python script.
+Scriptify let's you convert any file into a runnable Python script.
 
-## Introduction
-### Usage
-Turn some file into a .py code with:
+## Usage
+To turn something into an executable code, use:
 ```
-python3 scriptify.py [source_file] [dest_file].py
+scriptify.py [source_file] [dest_file].py
 ```
+_...and your script is ready!_
 
-To turn it back, simply launch the created script.
+To restore the file, simply launch the script with Python.
 
 ### Features
-This utility is in a very early stage of developpement.
+This project is still in early developpement. While changing the file format and hidding it's content, the current output script does not provide any protection for your data or improvements in file size.
 
-The current output script doesn't provide any improvements in size or privacy, new features will be deployed *very* soon:
-- **File compression** and signature
-- Container options: "minimum size" and "privacy+"
-- **Data encryption** with password
+New features will be deployed *very* soon:
+- File **compression** and signature
+- Alternate container configurations: *minimum size* or *enhanced privacy*
+- Data **encryption** w/ password
 
-
-###### _(under construction...)_
+_..._
