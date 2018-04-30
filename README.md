@@ -11,9 +11,12 @@ python3 scriptify.py [source_file] [dest_file].py
 To turn it back, simply launch the created script.
 
 ### Features
-This a **most early** version, the current output script doesn't provide any improvements in size or privacy.
+This utility is in a very early stage of developpement.
 
-New features should be deployed **very** soon:
+The current output script doesn't provide any improvements in size or privacy, new features will be deployed *very* soon:
 - **File compression** and signature
 - Container options: "minimum size" and "privacy+"
 - **Data encryption** with password
+
+
+###### _(under construction...)_
