@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+from os import path
+from sys import argv
+
+
+# CHECK FOR FLAGS #
+
+chck = lambda *f: any([flag in argv for flag in f])
+yes_flg = chck('-y', '--yes')
+
+# TODO: Removing the recovery script, overriding output.
+# rem_flg = chck('-r', '--remove')
+# out_flg = chck('-o', '--out')
+
+
+# FILE DATA #
+
+ORIG_FILENAME = "$ID_FILENAME"
+BIN_DATA = $ID_DATA
+
+
+# EXTRACT SCRIPT #
+
+if __name__ == '__main__':
+    if not yes_flg:
+        if input("Recover original file ? [Y/n] ") in {"n", "N"}:
+            print("Cancelling.")
+            exit()
+
+    print(f"Recovering \'{ORIG_FILENAME}\'... ", end="")
+    binary_data = BIN_DATA
+
+    # TODO: Check if file already exists
+
+    with open(ORIG_FILENAME, 'wb') as new_file:
+        size = new_file.write(binary_data)
+    print(f"Done.\nSize: {size // 1000} kB")
