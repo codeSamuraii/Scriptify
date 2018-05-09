@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Scriptify v0.1
@@ -18,13 +19,13 @@ def open_file(filepath, mode):
         filename = path.basename(filepath)
         file_object = open(filepath, mode)
     except FileNotFoundError:
-        print_exit(f"Error while opening \'{filename}\': not found.")
+        print_exit(f"Error while opening '{filename}': not found.")
     except PermissionError:
-        print_exit(f"Error while opening \'{filename}\': not allowed.")
+        print_exit(f"Error while opening '{filename}': not allowed.")
     except OSError as err:
-        print_exit(f"I/O Error while opening \'{filename}\': {err}")
+        print_exit(f"I/O Error while opening '{filename}': {err}")
     except Exception as unex:
-        print_exit(f"Unknown exception while opening \'{filename}\': {unex}")
+        print_exit(f"Unknown exception while opening '{filename}': {unex}")
 
     return file_object
 
