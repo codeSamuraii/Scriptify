@@ -4,8 +4,12 @@ Scriptify v0.2
 © Rémi Héneault (@codeSamuraii)
 https://github.com/codeSamuraii
 """
-import base64 as base64enc
+import sys
 from os import path
+from base64 import b64encode
+from Crypto.Random import random, get_random_bytes
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA3_256
 from argparse import ArgumentParser, FileType
 
 
@@ -14,8 +18,8 @@ def get_arguments():
         prog="scriptify.py",
         description="Turn any file into a runnable python script",
         usage=("scriptify.py [-h] [--help]\n       "
-               "scriptify.py 'source file' 'output file' [-m] [-b | -c [-p pass]] [-s msg]"),
-        epilog="If encryption is used and no password is set, the key will be stored in the script!")
+               "scriptify.py 'source file' 'output file' [-m] [-b] [-c [pass]] [-s msg]"),
+        epilog="If encryption is used and no password is set, a random key will be provided.")
 
     parser.add_argument('in_file',
                         metavar='source file',
@@ -30,15 +34,11 @@ def get_arguments():
     parser.add_argument('-m', '--minimal', action='store_true',
                         help="use a minimal/obfuscated recovery script")
 
-    encryption = parser.add_mutually_exclusive_group()
-    encryption.add_argument('-b', '--base64', action='store_true',
-                            help="encode data with base64")
+    parser.add_argument('-b', '--base64', action='store_true',
+                        help="encode data with base64")
 
-    encryption.add_argument('-c', '--crypted', action='store_true',
-                            help="encrypt data with AES")
-
-    parser.add_argument('-p', '--pass', metavar='*** ', dest='password',
-                        help="password to use with AES encryption")
+    parser.add_argument('-c', '--crypted', metavar='*** ', dest='password',
+                        help="encrypt data with AES")
 
     parser.add_argument('-s', '--say', metavar='... ', dest='message',
                         help='print a message when the script is run')
@@ -67,42 +67,40 @@ def print_welcome(args):
         exit()
 
 
-def file_to_string(file_obj):
-    print("* Reading source file... ", end='')
-    with file_obj as source_file:
-        binary_content = source_file.read()
-
-    hex_string = repr(binary_content)
-    print("OK.")
-    return hex_string
-
-
 def file_to_buffer(file_obj):
-    print("* Reading source file... ", end='')
     with file_obj as source_file:
         binary_content = source_file.read()
 
-    print("OK.")
     return binary_content
 
 
 if __name__ == '__main__':
     args = get_arguments()
+    in_file, out_file = args.in_file, args.out_file
     print_welcome(args)
 
-    in_file, out_file = args.in_file, args.out_file
+    print(" * Reading source file... ")
     raw_buffer = file_to_buffer(in_file)
 
     if args.base64:
-        print("* Encoding in Base64...", end='')
-        file_buffer = base64enc.b64encode(raw_buffer)
-        print("OK.")
-
-    elif args.crypted:
-        # TODO: ...
-        pass
-
+        print("* Encoding in Base64...")
+        encoded_buffer = b64encode(raw_buffer)
     else:
-        file_buffer = raw_buffer
+        encoded_buffer = raw_buffer
+
+    if args.crypted:
+        if args.password:
+            hasher = SHA3_256.new(args.password.encode('utf-8'))
+            key = hasher.digest()
+        else:
+            password = "".join(random.sample(string.hexdigits, 12))
+            hasher = SHA3_256.new(password.encode('utf-8'))
+            key = hasher.digest()
+
+        aes_cipher = AES.new(key, AES.MODE_EAX)
+        file_buffer = aes_cipher.encrypt(encoded_buffer)
+    else:
+        file_buffer = encoded_buffer
 
     hex_string = repr(file_buffer)
+    # COMBAK: Here
