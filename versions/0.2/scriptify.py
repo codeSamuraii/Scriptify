@@ -32,7 +32,7 @@ def get_arguments():
 
     encryption = parser.add_mutually_exclusive_group()
     encryption.add_argument('-b', '--base64', action='store_true',
-                        help="encode data with base64")
+                            help="encode data with base64")
 
     encryption.add_argument('-c', '--crypted', action='store_true',
                             help="encrypt data with AES")
@@ -106,5 +106,3 @@ if __name__ == '__main__':
         file_buffer = raw_buffer
 
     hex_string = repr(file_buffer)
-
-    # COMBAK: To be continued
