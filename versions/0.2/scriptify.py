@@ -7,9 +7,9 @@ https://github.com/codeSamuraii
 import sys
 from os import path
 from base64 import b64encode
-from Crypto.Random import random, get_random_bytes
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
+from Crypto.Random import random, get_random_bytes
 from argparse import ArgumentParser, FileType
 
 
@@ -38,7 +38,7 @@ def get_arguments():
                         help="encode data with base64")
 
     parser.add_argument('-c', '--crypted', metavar='*** ', dest='password',
-                        help="encrypt data with AES")
+                        nargs="?", default='', help="encrypt data with AES")
 
     parser.add_argument('-s', '--say', metavar='... ', dest='message',
                         help='print a message when the script is run')
@@ -88,19 +88,33 @@ if __name__ == '__main__':
     else:
         encoded_buffer = raw_buffer
 
-    if args.crypted:
-        if args.password:
-            hasher = SHA3_256.new(args.password.encode('utf-8'))
-            key = hasher.digest()
-        else:
-            password = "".join(random.sample(string.hexdigits, 12))
-            hasher = SHA3_256.new(password.encode('utf-8'))
-            key = hasher.digest()
+    if args.password == None:
+        file_buffer = encoded_buffer
+    elif args.password == '':
+        password = "".join(random.sample(string.hexdigits, 12))
+        hasher = SHA3_256.new(password.encode('utf-8'))
+        key = hasher.digest()
 
         aes_cipher = AES.new(key, AES.MODE_EAX)
         file_buffer = aes_cipher.encrypt(encoded_buffer)
     else:
-        file_buffer = encoded_buffer
+        hasher = SHA3_256.new(args.password.encode('utf-8'))
+        key = hasher.digest()
+
+        aes_cipher = AES.new(key, AES.MODE_EAX)
+        file_buffer = aes_cipher.encrypt(encoded_buffer)
 
     hex_string = repr(file_buffer)
-    # COMBAK: Here
+
+    print("* Loading template... ", end='')
+    with open_file("container.template.py", 'r') as template:
+        script = template.read()
+    print("OK.")
+
+    print("* Creating script... ", end='')
+    with open_file(dst_abspath, 'w') as output:
+        filled = script.replace("$$BIN_DATA$$", hex_string)
+        filled = filled.replace("$$ORIG_FILENAME$$", src_name)
+        # COMBAK: here
+        output.write(filled)
+    print("OK.")
