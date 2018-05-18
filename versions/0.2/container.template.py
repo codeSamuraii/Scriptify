@@ -17,6 +17,8 @@ custom_message = "$$CUSTOM_MSG$$"
 is_base_encoded = $$BASE64_ENC$$
 is_aes_encrypted = $$AES_ENC$$
 aes_key = $$AES_KEY$$
+aes_nonce = $$AES_NONCE$$
+aes_tag = $$AES_TAG$$
 
 binary_repr = $$BIN_DATA$$
 
@@ -47,11 +49,12 @@ if __name__ == '__main__':
     print(f"Recovering \'{original_filename}\'... ")
     data_buffer = eval(binary_repr)
 
+    if is_aes_encrypted:
+        from Crypto.Cipher import AES
+        cipher = AES.new(aes_key, AES.MODE_EAX, aes_nonce)
+        data_buffer = cipher.decrypt_and_verify(data_buffer, aes_tag)
     if is_base_encoded:
         data_buffer = b64decode(data_buffer)
-    elif is_aes_encrypted:
-        # ...
-        pass
 
     with open(original_filename, 'wb') as dest_file:
         size = dest_file.write(data_buffer)
