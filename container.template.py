@@ -12,7 +12,7 @@ yes_flg = check_flag('-y', '--yes')
 
 
 # FILE INFORMATION
-original_filename = path.basename("$$ORIG_FILENAME$$")
+original_filename = "$$ORIG_FILENAME$$"
 custom_message = "$$CUSTOM_MSG$$"
 is_base_encoded = $$BASE64_ENC$$
 is_aes_encrypted = $$AES_ENC$$
@@ -67,6 +67,9 @@ if __name__ == '__main__':
 
     if is_base_encoded:
         binary_repr = b64decode(binary_repr)
+
+    while path.exists(original_filename):
+        original_filename = input("File already exists. New name: ")
 
     with open(original_filename, 'wb') as dest_file:
         size = dest_file.write(binary_repr)

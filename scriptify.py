@@ -122,7 +122,7 @@ if __name__ == '__main__':
     else:
         script = script.replace("$$CUSTOM_MSG$$", "None")
 
-    script = script.replace("$$ORIG_FILENAME$$", args.in_file.name)
+    script = script.replace("$$ORIG_FILENAME$$", path.basename(args.in_file.name))
     script = script.replace("$$BIN_DATA$$", repr(file_buffer))
 
     print("* Creating script... ")
