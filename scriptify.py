@@ -119,6 +119,8 @@ if __name__ == '__main__':
 
     if args.message:
         script = script.replace("$$CUSTOM_MSG$$", args.message)
+    else:
+        script = script.replace("$$CUSTOM_MSG$$", "None")
 
     script = script.replace("$$ORIG_FILENAME$$", args.in_file.name)
     script = script.replace("$$BIN_DATA$$", repr(file_buffer))
@@ -126,4 +128,4 @@ if __name__ == '__main__':
     print("* Creating script... ")
     with args.out_file as output:
         size = output.write(script)
-    print(f"* DONE. {size // 1000}kB written.")
+    print(f"* Done! {size // 1000}kB written.")

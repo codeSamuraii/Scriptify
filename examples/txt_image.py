@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-#######################
-# THIS IS AN EXAMPLE
-# PASS: mysuperkey
-#######################
-
 from os import path
 from sys import argv
 from base64 import b64decode
@@ -19,7 +13,7 @@ yes_flg = check_flag('-y', '--yes')
 
 # FILE INFORMATION
 original_filename = "image2.jpg"
-custom_message = "Hello!"
+custom_message = "Pass: mysuperkey"
 is_base_encoded = True
 is_aes_encrypted = True
 aes_nonce = b'pc\xd1\x9a\xa5_\xf8x\x8dFT\xf5\xb5\xf1\xe1u'
