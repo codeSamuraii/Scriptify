@@ -1,96 +1,127 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Scriptify v0.1
+Scriptify v0.2
 © Rémi Héneault (@codeSamuraii)
 https://github.com/codeSamuraii
 """
 import sys
 from os import path
+from base64 import b64encode
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA3_256
+from Crypto.Random import random, get_random_bytes
+from argparse import ArgumentParser, FileType
 
 
-def print_exit(message):
-    print(message)
-    exit()
+def get_arguments():
+    parser = ArgumentParser(
+        prog="scriptify.py",
+        description="Turn any file into a runnable python script",
+        usage=("scriptify.py [-h] [--help]\n       "
+               "scriptify.py 'source file' 'output file' [-m] [-b] [-c [pass]] [-s msg]"),
+        epilog="If encryption is used and no password is set, a random key will be provided.")
+
+    parser.add_argument('in_file',
+                        metavar='source file',
+                        type=FileType('rb'),
+                        help="input file to convert")
+
+    parser.add_argument('out_file',
+                        metavar='output file',
+                        type=FileType('w'),
+                        help="name/path for the output script")
+
+    parser.add_argument('-m', '--minimal', action='store_true',
+                        help="use a minimal/obfuscated recovery script")
+
+    parser.add_argument('-b', '--base64', action='store_true',
+                        help="encode data with base64")
+
+    parser.add_argument('-c', '--crypted', metavar='*** ', dest='password',
+                        nargs="?", default='', help="encrypt data with AES")
+
+    parser.add_argument('-s', '--say', metavar='... ', dest='message',
+                        help='print a message when the script is run')
+
+    return parser.parse_args()
 
 
-def open_file(filepath, mode):
-    try:
-        filename = path.basename(filepath)
-        file_object = open(filepath, mode)
-    except FileNotFoundError:
-        print_exit(f"Error while opening '{filename}': not found.")
-    except PermissionError:
-        print_exit(f"Error while opening '{filename}': not allowed.")
-    except OSError as err:
-        print_exit(f"I/O Error while opening '{filename}': {err}")
-    except Exception as unex:
-        print_exit(f"Unknown exception while opening '{filename}': {unex}")
+def print_welcome(args):
+    print(f" - - Scriptify - - ")
+    print(f"Source: {args.in_file.name}")
+    print(f"Output: {args.out_file.name}\n")
 
-    return file_object
+    if args.minimal:
+        print("- Minimal script")
+    if args.base64:
+        print("- Base64 encoding")
+    if args.password == '':
+        print("- AES encryption (no password)")
+    elif args.password:
+        print("- AES encryption  -> " + args.password)
+    if args.message:
+        print("- Message display -> " + args.message)
+
+    if input("\nDo you want to continue ? [Y/n] ") in {"n", "N"}:
+        print("Cancelling.")
+        exit()
 
 
-def file_to_string(file_path):
-    with open_file(file_path, 'rb') as source_file:
+def file_to_buffer(file_obj):
+    with file_obj as source_file:
         binary_content = source_file.read()
 
-    hex_string = repr(binary_content)
-    return hex_string
-
-
-def string_to_file(hex_string, new_file_path):
-    binary_data = eval(hex_string)
-
-    with open_file(new_file_path, 'wb') as new_file:
-        size = new_file.write(binary_data)
-
-    filename = path.basename(new_file_path)
-    return filename, size
+    return binary_content
 
 
 if __name__ == '__main__':
-    argv = sys.argv
-    argc = len(argv)
+    args = get_arguments()
+    print_welcome(args)
 
-    if argc < 3:
-        print_exit("Usage: scriptify.py [source] [destination].py")
-    else:
-        source_path = argv[1]
-        dest_path = argv[2]
-
-    src_name = path.basename(source_path)
-    src_abspath = path.abspath(path.expanduser(source_path))
-    src_size = path.getsize(source_path)
-
-    dst_name = path.basename(dest_path)
-    dst_abspath = path.abspath(path.expanduser(dest_path))
-
-    print("\n ~ ~ Scriptify v0.1 ~ ~\n")
-    print(f"Source      : {src_name}")
-    print(f"Destination : {dst_name}")
-
-    if input("\nDo you want to continue ? [Y/n] ") in {"n", "N"}:
-        print_exit("Aborting.")
-
-    print("* Reading source file... ", end='')
-    bin = file_to_string(src_abspath)
-    print("OK.")
-
-    print("* Loading template... ", end='')
-    with open_file("container_script.template", 'r') as template:
+    print("\n* Loading template... ")
+    with open("container.template.py", 'r') as template:
         script = template.read()
-    print("OK.")
 
-    print("* Creating script... ", end='')
-    with open_file(dst_abspath, 'w') as output:
-        filled = script.replace("$ID_DATA", bin).replace("$ID_FILENAME", src_name)
-        output.write(filled)
-        print("OK.")
+    print("* Reading source file... ")
+    file_buffer = file_to_buffer(args.in_file)
 
-    print("Finished. Launch the script with Python to recover your file.")
+    if args.base64:
+        print("* Encoding in Base64...")
+        file_buffer = b64encode(file_buffer)
+        script = script.replace("$$BASE64_ENC$$", "True")
+    else:
+        script = script.replace("$$BASE64_ENC$$", "False")
 
-# TODO:
-#     - Documentation
-#     - Binary data compression
-#     - Binary data encryption w/ password protect
-#     - Cleaning, design improvements
+    if args.password == None:
+        script = script.replace("$$AES_ENC$$", "False")
+        script = script.replace("$$AES_TAG$$", "None")
+        script = script.replace("$$AES_NONCE$$", "None")
+    else:
+        print("* Encrypting...")
+        if args.password == '':
+            password = ''.join(random.sample(string.hexdigits, 12))
+        else:
+            password = args.password
+        print("  ->", password)
+
+        hasher = SHA3_256.new(password.encode('utf-8'))
+        key_hash = hasher.digest()
+
+        aes_cipher = AES.new(key_hash, AES.MODE_EAX)
+        file_buffer, tag = aes_cipher.encrypt_and_digest(file_buffer)
+        nonce = aes_cipher.nonce
+
+        script = script.replace("$$AES_ENC$$", "True")
+        script = script.replace("$$AES_TAG$$", repr(tag))
+        script = script.replace("$$AES_NONCE$$", repr(nonce))
+
+    if args.message:
+        script = script.replace("$$CUSTOM_MSG$$", args.message)
+
+    script = script.replace("$$ORIG_FILENAME$$", args.in_file.name)
+    script = script.replace("$$BIN_DATA$$", repr(file_buffer))
+
+    print("* Creating script... ")
+    with args.out_file as output:
+        size = output.write(script)
+    print(f"* DONE. {size // 1000}kB written.")
