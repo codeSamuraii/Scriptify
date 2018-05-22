@@ -12,7 +12,7 @@ yes_flg = check_flag('-y', '--yes')
 
 
 # FILE INFORMATION
-original_filename = "$$ORIG_FILENAME$$"
+original_filename = path.basename("$$ORIG_FILENAME$$")
 custom_message = "$$CUSTOM_MSG$$"
 is_base_encoded = $$BASE64_ENC$$
 is_aes_encrypted = $$AES_ENC$$
@@ -24,9 +24,9 @@ binary_repr = $$BIN_DATA$$
 
 def display_message():
     if custom_message:
-        print("\n - - - - - - - - - - - -")
+        print("\n- - - - - - - - - - - -")
         print(custom_message)
-        print(" - - - - - - - - - - - -\n")
+        print("- - - - - - - - - - - -\n")
 
 
 def confirm_recovery():
@@ -50,11 +50,20 @@ if __name__ == '__main__':
     if is_aes_encrypted:
         from Crypto.Cipher import AES
         from Crypto.Hash import SHA3_256
-        password = input("Password : ")
-        hasher = SHA3_256.new(password.encode('utf-8'))
-        key_hash = hasher.digest()
-        cipher = AES.new(key_hash, AES.MODE_EAX, aes_nonce)
-        binary_repr = cipher.decrypt_and_verify(binary_repr, aes_tag)
+        good_password = False
+
+        while not good_password:
+            password = input("Password : ")
+            hasher = SHA3_256.new(password.encode('utf-8'))
+            key_hash = hasher.digest()
+            cipher = AES.new(key_hash, AES.MODE_EAX, aes_nonce)
+
+            try:
+                binary_repr = cipher.decrypt_and_verify(binary_repr, aes_tag)
+            except ValueError:
+                print("Wrong password.")
+            else:
+                good_password = True
 
     if is_base_encoded:
         binary_repr = b64decode(binary_repr)

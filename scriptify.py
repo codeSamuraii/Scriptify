@@ -63,14 +63,16 @@ def print_welcome(args):
         print("- Message display -> " + args.message)
 
     if input("\nDo you want to continue ? [Y/n] ") in {"n", "N"}:
+        args.in_file.close()
+        args.out_file.close()
         print("Cancelling.")
         exit()
 
 
 def file_to_buffer(file_obj):
+    # TODO: Memory improvements
     with file_obj as source_file:
         binary_content = source_file.read()
-
     return binary_content
 
 
