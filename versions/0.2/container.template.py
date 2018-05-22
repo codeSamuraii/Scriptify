@@ -16,7 +16,6 @@ original_filename = "$$ORIG_FILENAME$$"
 custom_message = "$$CUSTOM_MSG$$"
 is_base_encoded = $$BASE64_ENC$$
 is_aes_encrypted = $$AES_ENC$$
-aes_key = $$AES_KEY$$
 aes_nonce = $$AES_NONCE$$
 aes_tag = $$AES_TAG$$
 
@@ -26,7 +25,7 @@ binary_repr = $$BIN_DATA$$
 def display_message():
     if custom_message:
         print("\n - - - - - - - - - - - -")
-        print(DISP_MESSAGE)
+        print(custom_message)
         print(" - - - - - - - - - - - -\n")
 
 
@@ -47,16 +46,20 @@ if __name__ == '__main__':
     confirm_recovery()
 
     print(f"Recovering \'{original_filename}\'... ")
-    data_buffer = eval(binary_repr)
 
     if is_aes_encrypted:
         from Crypto.Cipher import AES
-        cipher = AES.new(aes_key, AES.MODE_EAX, aes_nonce)
-        data_buffer = cipher.decrypt_and_verify(data_buffer, aes_tag)
+        from Crypto.Hash import SHA3_256
+        password = input("Password : ")
+        hasher = SHA3_256.new(password.encode('utf-8'))
+        key_hash = hasher.digest()
+        cipher = AES.new(key_hash, AES.MODE_EAX, aes_nonce)
+        binary_repr = cipher.decrypt_and_verify(binary_repr, aes_tag)
+
     if is_base_encoded:
-        data_buffer = b64decode(data_buffer)
+        binary_repr = b64decode(binary_repr)
 
     with open(original_filename, 'wb') as dest_file:
-        size = dest_file.write(data_buffer)
+        size = dest_file.write(binary_repr)
 
     print(f"Done. {size // 1000}kB written.")

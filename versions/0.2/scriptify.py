@@ -23,12 +23,12 @@ def get_arguments():
 
     parser.add_argument('in_file',
                         metavar='source file',
-                        # type=FileType('rb'),
+                        type=FileType('rb'),
                         help="input file to convert")
 
     parser.add_argument('out_file',
                         metavar='output file',
-                        # type=FileType('wb'),
+                        type=FileType('w'),
                         help="name/path for the output script")
 
     parser.add_argument('-m', '--minimal', action='store_true',
@@ -48,16 +48,16 @@ def get_arguments():
 
 def print_welcome(args):
     print(f" - - Scriptify - - ")
-    print(f"Source: {args.in_file}")
-    print(f"Output: {args.out_file}\n")
+    print(f"Source: {args.in_file.name}")
+    print(f"Output: {args.out_file.name}\n")
 
     if args.minimal:
         print("- Minimal script")
     if args.base64:
         print("- Base64 encoding")
-    if args.crypted and not args.password:
+    if args.password == '':
         print("- AES encryption (no password)")
-    elif args.crypted and args.password:
+    elif args.password:
         print("- AES encryption  -> " + args.password)
     if args.message:
         print("- Message display -> " + args.message)
@@ -76,45 +76,52 @@ def file_to_buffer(file_obj):
 
 if __name__ == '__main__':
     args = get_arguments()
-    in_file, out_file = args.in_file, args.out_file
     print_welcome(args)
 
-    print(" * Reading source file... ")
-    raw_buffer = file_to_buffer(in_file)
+    print("\n* Loading template... ")
+    with open("container.template.py", 'r') as template:
+        script = template.read()
+
+    print("* Reading source file... ")
+    file_buffer = file_to_buffer(args.in_file)
 
     if args.base64:
         print("* Encoding in Base64...")
-        encoded_buffer = b64encode(raw_buffer)
+        file_buffer = b64encode(file_buffer)
+        script = script.replace("$$BASE64_ENC$$", "True")
     else:
-        encoded_buffer = raw_buffer
+        script = script.replace("$$BASE64_ENC$$", "False")
 
     if args.password == None:
-        file_buffer = encoded_buffer
-    elif args.password == '':
-        password = "".join(random.sample(string.hexdigits, 12))
-        hasher = SHA3_256.new(password.encode('utf-8'))
-        key = hasher.digest()
-
-        aes_cipher = AES.new(key, AES.MODE_EAX)
-        file_buffer = aes_cipher.encrypt(encoded_buffer)
+        script = script.replace("$$AES_ENC$$", "False")
+        script = script.replace("$$AES_TAG$$", "None")
+        script = script.replace("$$AES_NONCE$$", "None")
     else:
-        hasher = SHA3_256.new(args.password.encode('utf-8'))
-        key = hasher.digest()
+        print("* Encrypting...")
+        if args.password == '':
+            password = ''.join(random.sample(string.hexdigits, 12))
+        else:
+            password = args.password
+        print("  ->", password)
 
-        aes_cipher = AES.new(key, AES.MODE_EAX)
-        file_buffer = aes_cipher.encrypt(encoded_buffer)
+        hasher = SHA3_256.new(password.encode('utf-8'))
+        key_hash = hasher.digest()
 
-    hex_string = repr(file_buffer)
+        aes_cipher = AES.new(key_hash, AES.MODE_EAX)
+        file_buffer, tag = aes_cipher.encrypt_and_digest(file_buffer)
+        nonce = aes_cipher.nonce
 
-    print("* Loading template... ", end='')
-    with open_file("container.template.py", 'r') as template:
-        script = template.read()
-    print("OK.")
+        script = script.replace("$$AES_ENC$$", "True")
+        script = script.replace("$$AES_TAG$$", repr(tag))
+        script = script.replace("$$AES_NONCE$$", repr(nonce))
 
-    print("* Creating script... ", end='')
-    with open_file(dst_abspath, 'w') as output:
-        filled = script.replace("$$BIN_DATA$$", hex_string)
-        filled = filled.replace("$$ORIG_FILENAME$$", src_name)
-        # COMBAK: here
-        output.write(filled)
-    print("OK.")
+    if args.message:
+        script = script.replace("$$CUSTOM_MSG$$", args.message)
+
+    script = script.replace("$$ORIG_FILENAME$$", args.in_file.name)
+    script = script.replace("$$BIN_DATA$$", repr(file_buffer))
+
+    print("* Creating script... ")
+    with args.out_file as output:
+        size = output.write(script)
+    print(f"* DONE. {size // 1000}kB written.")
