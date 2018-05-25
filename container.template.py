@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from os import path
 from sys import argv
+from lzma import decompress
 from base64 import b64decode
 
 # FLAGS
@@ -16,6 +17,7 @@ original_filename = "${name}"
 custom_message = "${msg}"
 is_base_encoded = ${base64_enc}
 is_aes_encrypted = ${aes_enc}
+is_compressed = ${compression}
 aes_nonce = ${nonce}
 aes_tag = ${tag}
 
@@ -46,6 +48,9 @@ if __name__ == '__main__':
     confirm_recovery()
 
     print(f"Recovering \'{original_filename}\'... ")
+
+    if is_compressed:
+        binary_repr = decompress(binary_repr)
 
     if is_aes_encrypted:
         from Crypto.Cipher import AES
