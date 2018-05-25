@@ -20,7 +20,7 @@ def get_arguments():
         prog="scriptify.py",
         description="Turn any file into a runnable python script",
         usage=("scriptify.py [-h] [--help]\n       "
-               "scriptify.py 'source file' 'output file' [-b] [-c [pass]] [-s msg]"),
+               "scriptify.py 'source file' 'output file' [-b] [-c[c]] [-p [pass]] [-s msg]"),
         epilog="If encryption is used and no password is set, a random key will be provided.")
 
     parser.add_argument('in_file',
@@ -37,10 +37,10 @@ def get_arguments():
     #                     help="use a minimal/obfuscated recovery script")
 
     parser.add_argument('-c', '--compress', action='count',
-                        help="compress file data (-c = level 6, -cc = level 9)")
+                        help="compress file data with LZMA (-c = level 6, -cc = level 9)")
 
-    parser.add_argument('-p', '--password', metavar='*** ', dest='password',
-                        nargs="?", default='', help="encrypt data with AES")
+    parser.add_argument('-p', '--password', metavar='***', dest='password',
+                        nargs="?", default='', help="encrypt data and password protect")
 
     parser.add_argument('-b', '--base64', action='store_true',
                         help="encode data with base64")
