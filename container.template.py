@@ -12,14 +12,14 @@ yes_flg = check_flag('-y', '--yes')
 
 
 # FILE INFORMATION
-original_filename = "$$ORIG_FILENAME$$"
-custom_message = "$$CUSTOM_MSG$$"
-is_base_encoded = $$BASE64_ENC$$
-is_aes_encrypted = $$AES_ENC$$
-aes_nonce = $$AES_NONCE$$
-aes_tag = $$AES_TAG$$
+original_filename = "${name}"
+custom_message = "${msg}"
+is_base_encoded = ${base64_enc}
+is_aes_encrypted = ${aes_enc}
+aes_nonce = ${nonce}
+aes_tag = ${tag}
 
-binary_repr = $$BIN_DATA$$
+binary_repr = ${bin}
 
 
 def display_message():

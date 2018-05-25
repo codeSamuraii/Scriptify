@@ -6,6 +6,7 @@ https://github.com/codeSamuraii
 """
 import sys
 from os import path
+from string import Template
 from base64 import b64encode
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
@@ -51,8 +52,8 @@ def print_welcome(args):
     print(f"Source: {args.in_file.name}")
     print(f"Output: {args.out_file.name}\n")
 
-    if args.minimal:
-        print("- Minimal script")
+    # if args.minimal:
+    #     print("- Minimal script")
     if args.base64:
         print("- Base64 encoding")
     if args.password == '':
@@ -82,23 +83,23 @@ if __name__ == '__main__':
 
     print("\n* Loading template... ")
     with open("container.template.py", 'r') as template:
-        script = template.read()
+        content = template.read()
 
     print("* Reading source file... ")
     file_buffer = file_to_buffer(args.in_file)
+    original_filename = path.basename(args.in_file.name)
+    substitutes = dict(name=original_filename,
+                       msg='',
+                       base64_enc='False',
+                       aes_enc='False', nonce='None', tag='None',
+                       bin='None')
 
     if args.base64:
         print("* Encoding in Base64...")
         file_buffer = b64encode(file_buffer)
-        script = script.replace("$$BASE64_ENC$$", "True")
-    else:
-        script = script.replace("$$BASE64_ENC$$", "False")
+        substitutes['base64_enc'] = 'True'
 
-    if args.password == None:
-        script = script.replace("$$AES_ENC$$", "False")
-        script = script.replace("$$AES_TAG$$", "None")
-        script = script.replace("$$AES_NONCE$$", "None")
-    else:
+    if args.password is not None:
         print("* Encrypting...")
         if args.password == '':
             password = ''.join(random.sample(string.hexdigits, 12))
@@ -113,17 +114,15 @@ if __name__ == '__main__':
         file_buffer, tag = aes_cipher.encrypt_and_digest(file_buffer)
         nonce = aes_cipher.nonce
 
-        script = script.replace("$$AES_ENC$$", "True")
-        script = script.replace("$$AES_TAG$$", repr(tag))
-        script = script.replace("$$AES_NONCE$$", repr(nonce))
+        substitutes['aes_enc'] = 'True'
+        substitutes['tag'] = repr(tag)
+        substitutes['nonce'] = repr(nonce)
 
     if args.message:
-        script = script.replace("$$CUSTOM_MSG$$", args.message)
-    else:
-        script = script.replace("$$CUSTOM_MSG$$", "None")
+        substitutes['msg'] = args.message
 
-    script = script.replace("$$ORIG_FILENAME$$", path.basename(args.in_file.name))
-    script = script.replace("$$BIN_DATA$$", repr(file_buffer))
+    substitutes['bin'] = repr(file_buffer)
+    script = Template(content).substitute(substitutes)
 
     print("* Creating script... ")
     with args.out_file as output:
