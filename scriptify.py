@@ -6,6 +6,7 @@ https://github.com/codeSamuraii
 """
 import sys
 from os import path
+from lzma import compress
 from string import Template
 from base64 import b64encode
 from Crypto.Cipher import AES
@@ -35,11 +36,14 @@ def get_arguments():
     # parser.add_argument('-m', '--minimal', action='store_true',
     #                     help="use a minimal/obfuscated recovery script")
 
+    parser.add_argument('-c', '--compress', action='count',
+                        help="compress file data (-c = level 6, -cc = level 9)")
+
+    parser.add_argument('-p', '--password', metavar='*** ', dest='password',
+                        nargs="?", default='', help="encrypt data with AES")
+
     parser.add_argument('-b', '--base64', action='store_true',
                         help="encode data with base64")
-
-    parser.add_argument('-c', '--crypted', metavar='*** ', dest='password',
-                        nargs="?", default='', help="encrypt data with AES")
 
     parser.add_argument('-s', '--say', metavar='... ', dest='message',
                         help='print a message when the script is run')
@@ -56,6 +60,8 @@ def print_welcome(args):
     #     print("- Minimal script")
     if args.base64:
         print("- Base64 encoding")
+    if args.compress:
+        print("- LZMA compression")
     if args.password == '':
         print("- AES encryption (no password)")
     elif args.password:
@@ -90,7 +96,7 @@ if __name__ == '__main__':
     original_filename = path.basename(args.in_file.name)
     substitutes = dict(name=original_filename,
                        msg='',
-                       base64_enc='False',
+                       base64_enc='False', compression='False',
                        aes_enc='False', nonce='None', tag='None',
                        bin='None')
 
@@ -117,6 +123,15 @@ if __name__ == '__main__':
         substitutes['aes_enc'] = 'True'
         substitutes['tag'] = repr(tag)
         substitutes['nonce'] = repr(nonce)
+
+    if args.compress:
+        if args.compress >= 2:
+            comp_level = 9
+        else:
+            comp_level = 6
+        print(f"* Compressing (level {comp_level})...")
+        file_buffer = compress(file_buffer, preset=comp_level)
+        substitutes['compression'] = 'True'
 
     if args.message:
         substitutes['msg'] = args.message
