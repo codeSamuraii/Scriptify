@@ -20,6 +20,7 @@ To restore the file, simply launch the script with Python.
 ### Development
 ##### To-Do
 - Documentation
+- Memory improvements
 - Better exception handling
 
 ##### New versions
