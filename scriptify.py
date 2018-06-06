@@ -5,14 +5,15 @@ Scriptify v0.2
 https://github.com/codeSamuraii
 """
 import sys
-from os import path
-from lzma import compress
-from string import Template
+from argparse import ArgumentParser, FileType
 from base64 import b64encode
+from lzma import compress
+from os import path, system
+from string import Template
+
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
-from Crypto.Random import random, get_random_bytes
-from argparse import ArgumentParser, FileType
+from Crypto.Random import get_random_bytes, random
 
 
 def get_arguments():
@@ -33,8 +34,8 @@ def get_arguments():
                         type=FileType('w'),
                         help="name/path for the output script")
 
-    # parser.add_argument('-m', '--minimal', action='store_true',
-    #                     help="use a minimal/obfuscated recovery script")
+    parser.add_argument('-m', '--minimal', action='store_true',
+                        help="use a minimal/obfuscated recovery script")
 
     parser.add_argument('-c', '--compress', action='count',
                         help="compress file data with LZMA (-c = level 6, -cc = level 9)")
@@ -142,4 +143,9 @@ if __name__ == '__main__':
     print("* Creating script... ")
     with args.out_file as output:
         size = output.write(script)
+
+    if args.minimal:
+        print("* Minifying script...")
+        print("  -> Calling 'pyminifier -O " + args.out_file.path + "'...")
+        os.system("pyminifier -O " + args.out_file.path)
     print(f"* Done! {size // 1000}kB written.")
