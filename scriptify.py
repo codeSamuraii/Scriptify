@@ -4,6 +4,7 @@ Scriptify v0.2
 © Rémi Héneault (@codeSamuraii)
 https://github.com/codeSamuraii
 """
+import os
 import sys
 from argparse import ArgumentParser, FileType
 from base64 import b64encode
@@ -143,9 +144,15 @@ if __name__ == '__main__':
     print("* Creating script... ")
     with args.out_file as output:
         size = output.write(script)
+    print(f"  -> {size // 1000}kB written.")
 
     if args.minimal:
         print("* Minifying script...")
-        print("  -> Calling 'pyminifier -O " + args.out_file.path + "'...")
-        os.system("pyminifier -O " + args.out_file.path)
-    print(f"* Done! {size // 1000}kB written.")
+        command = "pyminifier -O " + args.out_file.name + " > mini.py"
+        print(f"  -> Calling '{command}'...")
+        # os.system(command)
+
+    size_before = path.getsize(args.in_file.name)
+    size_after = path.getsize(args.out_file.name)
+
+    print(f"* Done! {size_before // 1000}kB  ->  {size_after // 1000}kB")
