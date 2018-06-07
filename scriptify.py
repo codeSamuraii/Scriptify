@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Scriptify v0.2
@@ -18,34 +19,33 @@ from Crypto.Random import get_random_bytes, random
 
 
 def get_arguments():
+    def u(s): return "\033[4m" + s + "\033[0m"
+
     parser = ArgumentParser(
         prog="scriptify.py",
         description="Turn any file into a runnable python script",
-        usage=("scriptify.py [-h] [--help]\n       "
-               "scriptify.py 'source file' 'output file' [-b] [-c[c]] [-p [pass]] [-s msg]"),
+        usage=(f"scriptify.py [-h] [--help]\n       "
+               f"scriptify.py {u('source')} {u('output')} [-m] [-c[c]] [-b] [-p [password]] [-s message]"),
         epilog="If encryption is used and no password is set, a random key will be provided.")
 
     parser.add_argument('in_file',
-                        metavar='source file',
+                        metavar='source',
                         type=FileType('rb'),
                         help="input file to convert")
 
     parser.add_argument('out_file',
-                        metavar='output file',
+                        metavar='output',
                         type=FileType('w'),
                         help="name/path for the output script")
 
     parser.add_argument('-m', '--minimal', action='store_true',
-                        help="use a minimal/obfuscated recovery script")
+                        help="use a minimal/obfuscated recovery script (requires pyminifier)")
 
     parser.add_argument('-c', '--compress', action='count',
-                        help="compress file data with LZMA (-c = level 6, -cc = level 9)")
+                        help="compress file data with LZMA (x1 = level 6, x2 = level 9)")
 
     parser.add_argument('-p', '--password', metavar='***', dest='password',
-                        nargs="?", default='', help="encrypt data and password protect")
-
-    parser.add_argument('-b', '--base64', action='store_true',
-                        help="encode data with base64")
+                        nargs="?", default='', help="encrypt data with AES and password protect output script")
 
     parser.add_argument('-s', '--say', metavar='... ', dest='message',
                         help='print a message when the script is run')
@@ -58,10 +58,10 @@ def print_welcome(args):
     print(f"Source: {args.in_file.name}")
     print(f"Output: {args.out_file.name}\n")
 
-    # if args.minimal:
-    #     print("- Minimal script")
-    if args.base64:
-        print("- Base64 encoding")
+    if args.minimal:
+        print("- Minimal script")
+    # if args.base64:
+    #     print("- Base64 encoding")
     if args.compress:
         print("- LZMA compression")
     if args.password == '':
@@ -89,23 +89,27 @@ if __name__ == '__main__':
     args = get_arguments()
     print_welcome(args)
 
+    in_name = path.basename(args.out_file.name)
+    in_path = path.dirname(args.out_file.name)
+    out_name = path.basename(args.out_file.name)
+    out_path = path.dirname(args.out_file.name)
+
     print("\n* Loading template... ")
     with open("container.template.py", 'r') as template:
         content = template.read()
 
     print("* Reading source file... ")
     file_buffer = file_to_buffer(args.in_file)
-    original_filename = path.basename(args.in_file.name)
-    substitutes = dict(name=original_filename,
+    substitutes = dict(name=in_name,
                        msg='',
                        base64_enc='False', compression='False',
                        aes_enc='False', nonce='None', tag='None',
                        bin='None')
 
-    if args.base64:
-        print("* Encoding in Base64...")
-        file_buffer = b64encode(file_buffer)
-        substitutes['base64_enc'] = 'True'
+    # if args.base64:
+    #     print("* Encoding in Base64...")
+    #     file_buffer = b64encode(file_buffer)
+    #     substitutes['base64_enc'] = 'True'
 
     if args.password is not None:
         print("* Encrypting...")
@@ -148,11 +152,22 @@ if __name__ == '__main__':
 
     if args.minimal:
         print("* Minifying script...")
-        command = "pyminifier -O " + args.out_file.name + " > mini.py"
-        print(f"  -> Calling '{command}'...")
-        # os.system(command)
+        tmp_name = "tmp_" + out_name
+        cmd_mv = f"mv {out_name} {tmp_name}"
+        cmd_mini = f"pyminifier -O {tmp_name} > {out_name}"
+        cmd_rm = f"rm -i {tmp_name}"
 
-    size_before = path.getsize(args.in_file.name)
-    size_after = path.getsize(args.out_file.name)
+        current_path = os.getcwd()
+        os.chdir(out_path)
+        print(f"  -> Calling '{cmd_mv}'...")
+        os.system(cmd_mv)
+        print(f"  -> Calling '{cmd_mini}'...")
+        os.system(cmd_mini)
+        print(f"  -> Calling '{cmd_rm}'...")
+        os.system(cmd_rm)
+        os.chdir(current_path)
+
+    size_before = path.getsize(path.join(in_path, in_name))
+    size_after = path.getsize(path.join(out_path, out_name))
 
     print(f"* Done! {size_before // 1000}kB  ->  {size_after // 1000}kB")
