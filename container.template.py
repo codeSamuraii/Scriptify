@@ -5,13 +5,6 @@ from lzma import decompress
 from os import path
 from sys import argv
 
-# FLAGS
-check_flag = lambda *f: any([flag in argv for flag in f])
-yes_flg = check_flag('-y', '--yes')
-#rem_flg = check_flag('-r', '--remove')
-#out_flg = check_flag('-o', '--out')
-
-
 # FILE INFORMATION
 original_filename = "${name}"
 custom_message = "${msg}"
@@ -24,28 +17,15 @@ aes_tag = ${tag}
 blob_repr = ${bin}
 
 
-def display_message():
-    if custom_message:
-        print("\n- - - - - - - - - - - -")
-        print(custom_message)
-        print("- - - - - - - - - - - -\n")
-
-
-def confirm_recovery():
-    if not yes_flg:
-        if input(f"Recover original file ? [Y/n] ") in {'n', 'N'}:
-            print("Cancelling.")
-            exit()
-    else:
-        print("Argument -y specified, skipping confirmation.")
-
-
 if __name__ == '__main__':
     # Print custom message
-    display_message()
+    if custom_message:
+        print(f"\n{" - " * 12}\n{custom_message}\n{" - " * 12}\n")
 
     # Confirm file recovery
-    confirm_recovery()
+    if input(f"Recover original file ? [Y/n] ") in {'n', 'N'}:
+        print("Cancelling.")
+        exit()
 
     print(f"Recovering \'{original_filename}\'... ")
 
@@ -70,8 +50,8 @@ if __name__ == '__main__':
             else:
                 good_password = True
 
-    if is_base_encoded:
-        blob_repr = b64decode(blob_repr)
+    # if is_base_encoded:
+    #     blob_repr = b64decode(blob_repr)
 
     while path.exists(original_filename):
         original_filename = input("File already exists. New name: ")
