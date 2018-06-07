@@ -20,7 +20,7 @@ blob_repr = ${bin}
 if __name__ == '__main__':
     # Print custom message
     if custom_message:
-        print(f"\n{" - " * 12}\n{custom_message}\n{" - " * 12}\n")
+        print(f"\n{' - ' * 12}\n{custom_message}\n{' - ' * 12}\n")
 
     # Confirm file recovery
     if input(f"Recover original file ? [Y/n] ") in {'n', 'N'}:
