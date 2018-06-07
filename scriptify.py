@@ -38,12 +38,10 @@ def get_arguments():
                         type=FileType('w'),
                         help="name/path for the output script")
 
-    # FIXME: Compression incompatible with minifying?
-    incompatible = parser.add_mutually_exclusive_group()
-    incompatible.add_argument('-m', '--minimal', action='store_true',
+    parser.add_argument('-m', '--minimal', action='store_true',
                               help="use a minimal/obfuscated recovery script (requires pyminifier)")
 
-    incompatible.add_argument('-c', '--compress', action='count',
+    parser.add_argument('-c', '--compress', action='count',
                               help="compress file data with LZMA (x1 = level 6, x2 = level 9)")
 
     parser.add_argument('-p', '--password', metavar='***', dest='password',
@@ -62,8 +60,6 @@ def print_welcome(args):
 
     if args.minimal:
         print("- Minimal script")
-    # if args.base64:
-    #     print("- Base64 encoding")
     if args.compress:
         print("- LZMA compression")
     if args.password == '':
@@ -92,9 +88,9 @@ if __name__ == '__main__':
     print_welcome(args)
 
     in_name = path.basename(args.in_file.name)
-    in_path = path.dirname(args.in_file.name)
+    in_path = path.abspath(path.dirname(args.in_file.name))
     out_name = path.basename(args.out_file.name)
-    out_path = path.dirname(args.out_file.name)
+    out_path = path.abspath(path.dirname(args.out_file.name))
 
     print("\n* Loading template... ")
     with open("container.template.py", 'r') as template:
@@ -107,11 +103,6 @@ if __name__ == '__main__':
                        base64_enc='False', compression='False',
                        aes_enc='False', nonce='None', tag='None',
                        bin='None')
-
-    # if args.base64:
-    #     print("* Encoding in Base64...")
-    #     file_buffer = b64encode(file_buffer)
-    #     substitutes['base64_enc'] = 'True'
 
     if args.password is not None:
         print("* Encrypting...")
@@ -144,6 +135,10 @@ if __name__ == '__main__':
     if args.message:
         substitutes['msg'] = args.message
 
+    print("* Encoding in Base64...")
+    file_buffer = b64encode(file_buffer)
+    substitutes['base64_enc'] = 'True'
+
     substitutes['bin'] = repr(file_buffer)
     script = Template(content).substitute(substitutes)
 
@@ -168,15 +163,6 @@ if __name__ == '__main__':
         print(f"  -> Calling '{cmd_rm}'...")
         os.system(cmd_rm)
         os.chdir(current_path)
-
-    # print("* DEBUG: Commenting/decommenting")
-    # with open(path.join(out_path, out_name), 'r') as output:
-    #     content = output.read()
-    #     content = content.replace("# blob_repr =", "blob_repr =")
-    #
-    # with open(path.join(out_path, out_name), 'w') as output:
-    #     output.write(content)
-    # print("* DEBUG: OK")
 
     size_before = path.getsize(path.join(in_path, in_name))
     size_after = path.getsize(path.join(out_path, out_name))

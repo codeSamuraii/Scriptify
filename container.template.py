@@ -29,6 +29,9 @@ if __name__ == '__main__':
 
     print(f"Recovering \'{original_filename}\'... ")
 
+    if is_base_encoded:
+        blob_repr = b64decode(blob_repr)
+
     if is_compressed:
         blob_repr = decompress(blob_repr)
 
@@ -50,8 +53,6 @@ if __name__ == '__main__':
             else:
                 good_password = True
 
-    # if is_base_encoded:
-    #     blob_repr = b64decode(blob_repr)
 
     while path.exists(original_filename):
         original_filename = input("File already exists. New name: ")
