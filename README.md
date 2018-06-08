@@ -4,7 +4,7 @@ Scriptify let's you convert any file into a runnable Python script.
 ### Usage
 To turn a file into an executable code, use:
 ```
-scriptify.py 'source file' 'output file' [-b] [-c [pass]] [-s msg]
+scriptify.py 'source file' 'output file' [-m] [-c[c]] [-p [pass]] [-s msg]
 ```
 Arguments :
 
@@ -17,15 +17,15 @@ To restore the file, simply launch the script with Python.
 
 ### Dependecies
 - [Pycryptodome](https://pypi.org/project/pycryptodome/) : ```pip3 install pycryptodome```
-- [pyminifier](https://github.com/liftoff/pyminifier)
+- [pyminifier](https://github.com/liftoff/pyminifier) : ```pip3 install pyminifier```
 
 ### Development
 ##### To-Do
 - Documentation
 - Memory improvements
-- Better compression - actual size improvements
-- Better exception handling
+- Better compression
+- Exception handling
 
 ##### New versions
-- Minimal/obfuscated recovery script
+- Obfuscated recovery script
 - Dependency-less recovery script
