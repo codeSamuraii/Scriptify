@@ -29,11 +29,8 @@ if __name__ == '__main__':
 
     print(f"Recovering \'{original_filename}\'... ")
 
-    if is_base_encoded:
-        blob_repr = b64decode(blob_repr)
-
-    if is_compressed:
-        blob_repr = decompress(blob_repr)
+    # if is_base_encoded:
+    #     blob_repr = b64decode(blob_repr)
 
     if is_aes_encrypted:
         from Crypto.Cipher import AES
@@ -52,6 +49,9 @@ if __name__ == '__main__':
                 print("Wrong password.")
             else:
                 good_password = True
+
+    if is_compressed:
+        blob_repr = decompress(blob_repr)
 
 
     while path.exists(original_filename):

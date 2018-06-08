@@ -84,6 +84,11 @@ def file_to_buffer(file_obj):
 
 
 if __name__ == '__main__':
+    #### DEBUG TOOLS ####
+    sys.path.append("/Users/remi/Documents/Développement/Outils")
+    from mytools import *
+    #####################
+
     args = get_arguments()
     print_welcome(args)
 
@@ -102,7 +107,16 @@ if __name__ == '__main__':
                        msg='',
                        base64_enc='False', compression='False',
                        aes_enc='False', nonce='None', tag='None',
-                       bin='None')
+                       bin="None")
+
+    if args.compress:
+        if args.compress >= 2:
+            comp_level = 9
+        else:
+            comp_level = 6
+        print(f"* Compressing (level {comp_level})...")
+        file_buffer = compress(file_buffer, preset=comp_level)
+        substitutes['compression'] = 'True'
 
     if args.password is not None:
         print("* Encrypting...")
@@ -123,23 +137,14 @@ if __name__ == '__main__':
         substitutes['tag'] = repr(tag)
         substitutes['nonce'] = repr(nonce)
 
-    if args.compress:
-        if args.compress >= 2:
-            comp_level = 9
-        else:
-            comp_level = 6
-        print(f"* Compressing (level {comp_level})...")
-        file_buffer = compress(file_buffer, preset=comp_level)
-        substitutes['compression'] = 'True'
-
     if args.message:
         substitutes['msg'] = args.message
 
-    print("* Encoding in Base64...")
-    file_buffer = b64encode(file_buffer)
-    substitutes['base64_enc'] = 'True'
+    # print("* Encoding in Base64...")
+    # file_buffer = b64encode(file_buffer)
+    # substitutes['base64_enc'] = 'True'
 
-    substitutes['bin'] = repr(file_buffer)
+    substitutes["bin"] = repr(file_buffer)
     script = Template(content).substitute(substitutes)
 
     print("* Creating script... ")

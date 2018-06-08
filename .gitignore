@@ -1,6 +1,7 @@
 .DS_STORE
 sandbox
 *.old
+image_test.jpg
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
