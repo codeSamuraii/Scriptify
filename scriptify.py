@@ -140,9 +140,11 @@ if __name__ == '__main__':
     if args.message:
         substitutes['msg'] = args.message
 
-    # print("* Encoding in Base64...")
-    # file_buffer = b64encode(file_buffer)
-    # substitutes['base64_enc'] = 'True'
+    if args.minimal:
+        # Base64 required, otherwise minifying breaks the file
+        print("* Encoding in Base64...")
+        file_buffer = b64encode(file_buffer)
+        substitutes['base64_enc'] = 'True'
 
     substitutes["bin"] = repr(file_buffer)
     script = Template(content).substitute(substitutes)
