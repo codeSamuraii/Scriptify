@@ -84,10 +84,6 @@ def file_to_buffer(file_obj):
 
 
 if __name__ == '__main__':
-    #### DEBUG TOOLS ####
-    sys.path.append("/Users/remi/Documents/Développement/Outils")
-    from mytools import *
-    #####################
 
     args = get_arguments()
     print_welcome(args)
