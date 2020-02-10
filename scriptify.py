@@ -6,16 +6,15 @@ Scriptify v0.2
 https://github.com/codeSamuraii
 """
 import os
-import sys
 from argparse import ArgumentParser, FileType
 from base64 import b64encode
 from lzma import compress
-from os import path, system
+from os import path
 from string import Template
 
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA3_256
-from Crypto.Random import get_random_bytes, random
+from Crypto.Random import random
 
 
 def get_arguments():
