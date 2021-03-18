@@ -1,5 +1,5 @@
 # Scriptify
-Scriptify converts any file into a runnable Python script that will restore the original file when run.
+Scriptify converts any file into a runnable Python script that restores the original file when run.
 
 ### Usage
 To turn a file into an executable code, use:
